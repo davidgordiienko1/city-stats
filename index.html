@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<title>City Stats</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:15px;
+    font-family:Arial,sans-serif;
+    text-align:center;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+.stats{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.card{
+    flex:1;
+    min-width:120px;
+    background:#f4f4f4;
+    border-radius:8px;
+    padding:12px;
+}
+
+.icon{
+    font-size:28px;
+}
+
+.number{
+    font-size:22px;
+    font-weight:bold;
+}
+
+.label{
+    font-size:12px;
+}
+
+.button{
+    display:inline-block;
+    margin-top:18px;
+    background:#0a2540;
+    color:white;
+    text-decoration:none;
+    padding:8px 16px;
+    border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>By the Numbers</h2>
+
+<div style="color:gray;margin-bottom:15px;">
+This Week at a Glance
+</div>
+
+<div class="stats">
+
+<div class="card">
+<div class="icon">🛣️</div>
+<div class="number" id="roads">-</div>
+<div class="label">Roads Repaired</div>
+</div>
+
+<div class="card">
+<div class="icon">🗑️</div>
+<div class="number" id="trash">-</div>
+<div class="label">Tons Collected</div>
+</div>
+
+<div class="card">
+<div class="icon">🛡️</div>
+<div class="number" id="calls">-</div>
+<div class="label">Service Calls</div>
+</div>
+
+<div class="card">
+<div class="icon">📄</div>
+<div class="number" id="violations">-</div>
+<div class="label">Violations Fixed</div>
+</div>
+
+<div class="card">
+<div class="icon">🌳</div>
+<div class="number" id="trees">-</div>
+<div class="label">Trees Trimmed</div>
+</div>
+
+</div>
+
+<a class="button" href="#">
+View More City Stats →
+</a>
+
+</div>
+
+<script>
+
+async function loadStats(){
+
+    const response = await fetch("stats.json");
+
+    const stats = await response.json();
+
+    document.getElementById("roads").textContent = stats.roads;
+    document.getElementById("trash").textContent = stats.trash;
+    document.getElementById("calls").textContent = stats.calls;
+    document.getElementById("violations").textContent = stats.violations;
+    document.getElementById("trees").textContent = stats.trees;
+
+}
+
+loadStats();
+
+</script>
+
+</body>
+
+</html>
