@@ -22,7 +22,16 @@ jobs:
             --show-error \
             "${{ secrets.ONEDRIVE_STATS_URL }}" \
             -o stats.json.new
+       - name: Validate JSON file
+        run: |
+          echo "Preview:"
+          head -c 200 stats.json.new
+          echo ""
 
+          if grep -q "<html" stats.json.new; then
+            echo "ERROR: Received HTML instead of JSON"
+            exit 1
+          fi
       - name: Replace if changed
         run: |
           if ! cmp -s stats.json.new stats.json; then
