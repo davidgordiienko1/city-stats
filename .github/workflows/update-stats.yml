@@ -1,0 +1,30 @@
+name: Update City Stats
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download latest stats
+        run: |
+          curl -L "${{ secrets.ONEDRIVE_STATS_URL }}" -o stats.json.new
+
+      - name: Replace if changed
+        run: |
+          if ! cmp -s stats.json.new stats.json; then
+            mv stats.json.new stats.json
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add stats.json
+            git commit -m "Update city stats"
+            git push
+          else
+            echo "No changes."
+          fi
