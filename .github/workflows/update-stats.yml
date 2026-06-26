@@ -12,26 +12,72 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download latest stats
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
         run: |
-          curl -L \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36" \
-            -H "Accept: application/json,text/plain,*/*" \
-            --fail \
-            --silent \
-            --show-error \
-            "${{ secrets.ONEDRIVE_STATS_URL }}" \
-            -o stats.json.new
-       - name: Validate JSON file
+          npm init -y
+          npm install playwright
+          npx playwright install
+
+      - name: Create download script
+        run: |
+          cat << 'EOF' > download.js
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+
+            const context = await browser.newContext({
+              acceptDownloads: true
+            });
+
+            const page = await context.newPage();
+
+            const url = process.env.ONEDRIVE_STATS_URL;
+
+            console.log("Opening:", url);
+            await page.goto(url, { waitUntil: 'domcontentloaded' });
+
+            // Try to catch download automatically
+            let download;
+
+            try {
+              [download] = await Promise.all([
+                page.waitForEvent('download', { timeout: 10000 }),
+                page.click('text=Download').catch(() => {})
+              ]);
+            } catch (e) {
+              console.log("Download button not found or auto-download triggered...");
+              download = await page.waitForEvent('download');
+            }
+
+            await download.saveAs('stats.json.new');
+            console.log("✅ Downloaded file");
+
+            await browser.close();
+          })();
+          EOF
+
+      - name: Download latest stats (Playwright)
+        env:
+          ONEDRIVE_STATS_URL: ${{ secrets.ONEDRIVE_STATS_URL }}
+        run: node download.js
+
+      - name: Validate JSON file
         run: |
           echo "Preview:"
           head -c 200 stats.json.new
           echo ""
 
-          if grep -q "<html" stats.json.new; then
+          if grep -qi "<html" stats.json.new; then
             echo "ERROR: Received HTML instead of JSON"
             exit 1
           fi
+
       - name: Replace if changed
         run: |
           if ! cmp -s stats.json.new stats.json; then
