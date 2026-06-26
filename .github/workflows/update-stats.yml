@@ -40,23 +40,16 @@ jobs:
             const url = process.env.ONEDRIVE_STATS_URL;
 
             console.log("Opening:", url);
-            await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-            // Try to catch download automatically
-            let download;
-
-            try {
-              [download] = await Promise.all([
-                page.waitForEvent('download', { timeout: 10000 }),
-                page.click('text=Download').catch(() => {})
-              ]);
-            } catch (e) {
-              console.log("Download button not found or auto-download triggered...");
-              download = await page.waitForEvent('download');
-            }
+            // ✅ FIX: listen for download BEFORE navigation
+            const [download] = await Promise.all([
+              page.waitForEvent('download'),
+              page.goto(url)
+            ]);
 
             await download.saveAs('stats.json.new');
-            console.log("✅ Downloaded file");
+
+            console.log("✅ Download complete");
 
             await browser.close();
           })();
