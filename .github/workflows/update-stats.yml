@@ -25,32 +25,38 @@ jobs:
 
       - name: Create download script
         run: |
-          cat << 'EOF' > download.js
+          cat > download.js << 'EOF'
           const { chromium } = require('playwright');
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
-
+          
             const context = await browser.newContext({
               acceptDownloads: true
             });
-
+          
             const page = await context.newPage();
-
             const url = process.env.ONEDRIVE_STATS_URL;
-
-            console.log("Opening:", url);
-
-            // ✅ FIX: listen for download BEFORE navigation
-            const [download] = await Promise.all([
-              page.waitForEvent('download'),
-              page.goto(url)
-            ]);
-
+          
+            console.log("Opening (forcing download):", url);
+          
+            // Go to blank first
+            await page.goto('about:blank');
+          
+            // Listen for download
+            const downloadPromise = page.waitForEvent('download');
+          
+            // Trigger download without navigation handling
+            await page.evaluate((u) => {
+              window.location.href = u;
+            }, url).catch(() => {});
+          
+            const download = await downloadPromise;
+          
             await download.saveAs('stats.json.new');
-
+          
             console.log("✅ Download complete");
-
+          
             await browser.close();
           })();
           EOF
