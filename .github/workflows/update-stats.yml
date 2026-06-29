@@ -2,8 +2,11 @@ name: Update City Stats
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   update:
@@ -12,80 +15,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Playwright
-        run: |
-          npm init -y
-          npm install playwright
-          npx playwright install
+      - name: Install dependencies
+        run: npm install
 
-      - name: Create download script
-        run: |
-          cat > download.js << 'EOF'
-          const { chromium } = require('playwright');
+      - name: Install Chromium
+        run: npx playwright install chromium
 
-          (async () => {
-            const browser = await chromium.launch({ headless: true });
-          
-            const context = await browser.newContext({
-              acceptDownloads: true
-            });
-          
-            const page = await context.newPage();
-            const url = process.env.ONEDRIVE_STATS_URL;
-          
-            console.log("Opening (forcing download):", url);
-          
-            // Go to blank first
-            await page.goto('about:blank');
-          
-            // Listen for download
-            const downloadPromise = page.waitForEvent('download');
-          
-            // Trigger download without navigation handling
-            await page.evaluate((u) => {
-              window.location.href = u;
-            }, url).catch(() => {});
-          
-            const download = await downloadPromise;
-          
-            await download.saveAs('stats.json.new');
-          
-            console.log("✅ Download complete");
-          
-            await browser.close();
-          })();
-          EOF
-
-      - name: Download latest stats (Playwright)
+      - name: Download latest stats
         env:
           ONEDRIVE_STATS_URL: ${{ secrets.ONEDRIVE_STATS_URL }}
         run: node download.js
 
-      - name: Validate JSON file
+      - name: Validate download
         run: |
           echo "Preview:"
           head -c 200 stats.json.new
-          echo ""
+          echo
 
           if grep -qi "<html" stats.json.new; then
-            echo "ERROR: Received HTML instead of JSON"
+            echo "ERROR: Received HTML instead of JSON."
             exit 1
           fi
 
-      - name: Replace if changed
+      - name: Commit updated stats
         run: |
-          if ! cmp -s stats.json.new stats.json; then
-            mv stats.json.new stats.json
-            git config user.name "github-actions"
-            git config user.email "github-actions@github.com"
-            git add stats.json
-            git commit -m "Update city stats"
-            git push
-          else
+          if cmp -s stats.json.new stats.json; then
             echo "No changes."
+            rm stats.json.new
+            exit 0
           fi
+
+          mv stats.json.new stats.json
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add stats.json
+          git commit -m "Update city stats"
+          git push
