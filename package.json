@@ -1,0 +1,7 @@
+{
+  "name": "city-stats",
+  "private": true,
+  "dependencies": {
+    "playwright": "^1.54.0"
+  }
+}
