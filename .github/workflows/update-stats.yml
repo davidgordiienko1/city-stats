@@ -28,34 +28,34 @@ jobs:
 
       - name: Download latest stats
         env:
-          ONEDRIVE_STATS_URL: ${{ secrets.ONEDRIVE_STATS_URL }}
+          ONEDRIVE_STATS_URL: ${{ secrets.NEW_ONEDRIVE_STATS_URL }}
         run: node download.js
 
       - name: Validate download
         run: |
           echo "Preview:"
-          head -c 200 stats.json.new
+          head -c 200 citystats.json.new
           echo
 
-          if grep -qi "<html" stats.json.new; then
+          if grep -qi "<html" citystats.json.new; then
             echo "ERROR: Received HTML instead of JSON."
             exit 1
           fi
 
       - name: Commit updated stats
         run: |
-          if cmp -s stats.json.new stats.json; then
+          if cmp -s citystats.json.new citystats.json; then
             echo "No changes."
-            rm stats.json.new
+            rm citystats.json.new
             exit 0
           fi
 
-          mv stats.json.new stats.json
+          mv citystats.json.new citystats.json
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add stats.json
+          git add citystats.json
 
           git commit -m "Update city stats"
 

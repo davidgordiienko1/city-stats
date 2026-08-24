@@ -11,7 +11,7 @@ const { chromium } = require("playwright");
 
   const page = await context.newPage();
 
-  const url = process.env.ONEDRIVE_STATS_URL;
+  const url = process.env.NEW_ONEDRIVE_STATS_URL;
 
   console.log("Downloading:", url);
 
@@ -25,7 +25,7 @@ const { chromium } = require("playwright");
 
   const download = await downloadPromise;
 
-  await download.saveAs("stats.json.new");
+  await download.saveAs("citystats.json.new");
 
   console.log("Download complete.");
 

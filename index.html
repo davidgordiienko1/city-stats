@@ -1,137 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-
 <meta charset="UTF-8">
-
-<title>City Stats</title>
+<title>Department Statistics</title>
 
 <style>
-
 body{
     margin:0;
-    padding:15px;
+    padding:20px;
     font-family:Arial,sans-serif;
-    text-align:center;
+    background:#f5f7fa;
 }
 
 .container{
-    max-width:900px;
+    max-width:1200px;
     margin:auto;
 }
 
-.stats{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:space-between;
-    gap:10px;
+.header{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
 }
 
 .card{
-    flex:1;
-    min-width:120px;
-    background:#f4f4f4;
-    border-radius:8px;
-    padding:12px;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
 }
 
 .icon{
-    font-size:28px;
+    font-size:40px;
 }
 
-.number{
-    font-size:22px;
+.current{
+    font-size:32px;
     font-weight:bold;
 }
 
 .label{
-    font-size:12px;
+    margin-top:5px;
 }
 
-.button{
-    display:inline-block;
-    margin-top:18px;
-    background:#0a2540;
-    color:white;
-    text-decoration:none;
-    padding:8px 16px;
-    border-radius:5px;
+.trend{
+    margin-top:10px;
+    font-weight:bold;
 }
 
+.positive{
+    color:green;
+}
+
+.negative{
+    color:red;
+}
+
+.ytd{
+    color:#666;
+    margin-top:5px;
+}
 </style>
 
 </head>
-
 <body>
 
 <div class="container">
 
-<h2>By the Numbers</h2>
-
-<div style="color:gray;margin-bottom:15px;">
-This Week at a Glance
+<div class="header">
+    <h1 id="departmentName"></h1>
+    <div id="lastUpdated"></div>
 </div>
 
-<div class="stats">
-
-<div class="card">
-<div class="icon">🛣️</div>
-<div class="number" id="roads">-</div>
-<div class="label">Roads Repaired</div>
-</div>
-
-<div class="card">
-<div class="icon">🗑️</div>
-<div class="number" id="trash">-</div>
-<div class="label">Tons Collected</div>
-</div>
-
-<div class="card">
-<div class="icon">🛡️</div>
-<div class="number" id="calls">-</div>
-<div class="label">Service Calls</div>
-</div>
-
-<div class="card">
-<div class="icon">📄</div>
-<div class="number" id="violations">-</div>
-<div class="label">Violations Fixed</div>
-</div>
-
-<div class="card">
-<div class="icon">🌳</div>
-<div class="number" id="trees">-</div>
-<div class="label">Trees Trimmed</div>
-</div>
-
-</div>
-
-<a class="button" href="#">
-View More City Stats →
-</a>
+<div id="statsContainer" class="stats-grid"></div>
 
 </div>
 
 <script>
 
-async function loadStats(){
+async function loadDepartment(){
 
-    const response = await fetch("stats.json");
+    const params = new URLSearchParams(window.location.search);
 
-    const stats = await response.json();
+    const dept = params.get("dept") || "police";
 
-    document.getElementById("roads").textContent = stats.roads;
-    document.getElementById("trash").textContent = stats.trash;
-    document.getElementById("calls").textContent = stats.calls;
-    document.getElementById("violations").textContent = stats.violations;
-    document.getElementById("trees").textContent = stats.trees;
+    const response = await fetch("citystats.json");
+
+    const data = await response.json();
+
+    const department = data.departments[dept];
+
+    document.getElementById("departmentName").textContent =
+        department.department;
+
+    document.getElementById("lastUpdated").textContent =
+        "Last Updated: " + department.lastUpdated;
+
+    const container =
+        document.getElementById("statsContainer");
+
+    container.innerHTML = "";
+
+    department.stats.forEach(stat => {
+
+        const trendClass =
+            stat.difference >= 0
+                ? "positive"
+                : "negative";
+
+        const trendArrow =
+            stat.difference >= 0
+                ? "▲"
+                : "▼";
+
+        container.innerHTML += `
+            <div class="card">
+                <div class="icon">${stat.icon}</div>
+
+                <div class="current">
+                    ${stat.current}
+                </div>
+
+                <div class="label">
+                    ${stat.label}
+                </div>
+
+                <div class="trend ${trendClass}">
+                    ${trendArrow}
+                    ${stat.difference}
+                    vs Last Week
+                </div>
+
+                <div class="ytd">
+                    YTD: ${stat.ytd}
+                </div>
+            </div>
+        `;
+
+    });
 
 }
 
-loadStats();
+loadDepartment();
 
 </script>
 
 </body>
-
 </html>
