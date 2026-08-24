@@ -28,7 +28,7 @@ jobs:
 
       - name: Download latest stats
         env:
-          ONEDRIVE_STATS_URL: ${{ secrets.NEW_ONEDRIVE_STATS_URL }}
+          NEW_ONEDRIVE_STATS_URL: ${{ secrets.NEW_ONEDRIVE_STATS_URL }}
         run: node download.js
 
       - name: Validate download
