@@ -2,12 +2,22 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Department Statistics</title>
 
 <style>
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    overflow-x:hidden;
+}
+
 body{
     margin:0;
-    padding:20px;
+    padding:clamp(12px,3vw,20px);
     font-family:Arial,sans-serif;
     background:#f5f7fa;
 }
@@ -19,18 +29,23 @@ body{
 
 .header{
     text-align:center;
-    margin-bottom:30px;
+    margin-bottom:clamp(20px,4vw,30px);
+}
+
+.header h1{
+    overflow-wrap:anywhere;
 }
 
 .stats-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
+    grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));
+    gap:clamp(12px,2vw,20px);
 }
 
 .card{
     background:white;
-    padding:20px;
+    min-width:0;
+    padding:clamp(16px,3vw,20px);
     border-radius:12px;
     box-shadow:0 2px 8px rgba(0,0,0,.1);
 }
@@ -148,6 +163,19 @@ async function loadDepartment(){
 
 loadDepartment();
 
+</script>
+
+<script>
+// Let an iframe host keep the widget exactly as tall as its content.
+const resizeWidget = () => {
+    window.parent.postMessage({
+        type: "city-stats-resize",
+        height: document.body.scrollHeight
+    }, "*");
+};
+
+new ResizeObserver(resizeWidget).observe(document.documentElement);
+window.addEventListener("load", resizeWidget);
 </script>
 
 </body>
