@@ -127,7 +127,7 @@ async function loadDepartment(){
     const department = data.departments[dept];
 
     document.getElementById("departmentName").textContent =
-        department.department;
+        department.department + " Weekly Stats";
 
     document.getElementById("lastUpdated").textContent =
         "Last Updated: " + department.lastUpdated;
